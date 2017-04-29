@@ -1,0 +1,13 @@
+{
+  "name": "cryptobar",
+  "version": "0.1.0",
+  "description": "BitBar plugin which check your balance",
+  "main": "cryptobar.js",
+  "author": "oppenheimer",
+  "license": "MIT",
+  "dependencies": {
+    "bitbar": "^0.3.0",
+    "kraken-api": "^0.1.7",
+    "poloniex-api-node": "^1.0.2"
+  }
+}
