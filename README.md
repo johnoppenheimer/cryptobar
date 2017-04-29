@@ -1,6 +1,8 @@
 # Cryptobar
 BitBar plugin that check every given time the current status of your currencies in [Kraken](https://kraken.com) or [Poloniex](https://poloniex.com)
 
+![Screenshot](screenshot.png)
+
 ### How to install
 ```
 git clone https://github.com/johnoppenheimer/cryptobar.git
