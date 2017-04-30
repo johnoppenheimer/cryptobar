@@ -30,9 +30,9 @@ module.exports = {
 ### Configuration with BitBar
 BitBar will try to read files that won't work (like a nice package.json), so to avoid that you can create a folder in your home (like `~/.bitbar`), and create symbolic link to `cryptobar.js` like:
 ```
-ln -s /path/to/the/repo/cryptobar.js ~/.bitbar/plugins/cryptobar.30s.js
+ln -s /path/to/the/repo/cryptobar.js ~/.bitbar/plugins/cryptobar.5m.js
 ```
-The `30s` in the filename is important because it say to BitBar what is the refresh rate
+The `5m` in the filename is important because it say to BitBar what is the refresh rate, but you can put any value like `30s` for every 30 seconds or `10m` for every ten minutes
 
 Then you need to set the plugins path to BitBar
 ```
