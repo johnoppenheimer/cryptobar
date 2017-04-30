@@ -6,6 +6,7 @@
   "author": "oppenheimer",
   "license": "MIT",
   "dependencies": {
+    "async": "^2.3.0",
     "bitbar": "^0.3.0",
     "kraken-api": "^0.1.7",
     "poloniex-api-node": "^1.0.2"

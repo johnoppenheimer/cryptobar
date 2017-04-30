@@ -3,6 +3,7 @@
 const bitbar = require("bitbar");
 const KrakenClient = require("kraken-api")
 const PoloniexClient = require("poloniex-api-node");
+const async = require("async");
 const config = require("./config");
 
 const FONT = 'Monaco';
@@ -36,56 +37,74 @@ if (config.platforms.hasOwnProperty("kraken")) {
     promises.push(new Promise((resolve, reject) => {
         var arrayKraken = [];
 
-        kraken.api("Balance", null, (err, result) => {
-            if (err) { reject(err) }
-            else {
-                result = result.result;
-                arrayKraken.push({
-                    text: 'Kraken',
-                    color: COLOR_RED,
-                    font: FONT
-                });
+        arrayKraken.push({
+            text: 'Kraken',
+            color: COLOR_RED,
+            font: FONT
+        });
 
-                let balances = [];
-                for (var key in result) {
-                    //Filter only the one with something on it
-                    if (parseFloat(result[key]) > 0 && key !== "XXBT") {
-                        balances.push({
-                            name: key, // ISO code for the currency
-                            value: result[key] // how much you have of this currency
-                        });
-                    }
-                }
-                //Get pair with BTC for each currency in balance
-                var pairs = {}
-                balances.forEach(b => {
-                    pairs[b.name] = b.name + "XXBT";
+        async.series([
+            (callback) => {
+                kraken.api("TradeBalance", {asset: config.platforms.kraken.defaultCurrency}, (err, data) => {
+                    arrayKraken.push({
+                        text: `Total: ${data.result.eb} ${config.platforms.kraken.defaultCurrency}`,
+                        font: FONT,
+                        color: COLOR_GREY,
+                        size: SMALL_SIZE
+                    });
+                    callback(null);
                 });
-                // Query Tickers for each pairs
-                kraken.api("Ticker", { pair: Object.keys(pairs).map(k => pairs[k]).join(",") }, (err, tickers) => {
+            },
+            (callback) => {
+                kraken.api("Balance", null, (err, result) => {
                     if (err) { reject(err) }
                     else {
-                        tickers = tickers.result;
+                        result = result.result;
+
+                        let balances = [];
+                        for (var key in result) {
+                            //Filter only the one with something on it
+                            if (parseFloat(result[key]) > 0 && key !== "XXBT") {
+                                balances.push({
+                                    name: key, // ISO code for the currency
+                                    value: result[key] // how much you have of this currency
+                                });
+                            }
+                        }
+                        //Get pair with BTC for each currency in balance
+                        var pairs = {}
                         balances.forEach(b => {
-                            let average = tickers[pairs[b.name]].p[0] // volume weighted average price today
-                            let averageLast24 = tickers[pairs[b.name]].p[1] // volume weighted average price for last 24H
-                            let btcValue = parseFloat(average) * parseFloat(b.value); //How much BTC you have for this currency
-
-                            // let percentageUpdate = ((average - averageLast24)/averageLast24)*100; // % change
-                            // percentageUpdate = percentageUpdate.toFixed(2); // trunc float to 2 number after dot
-
-                            arrayKraken.push({
-                                text: `${b.name} ${b.value} = ${btcValue}₿`,
-                                color: COLOR_WHITE,
-                                font: FONT,
-                                size: SMALL_SIZE
-                            });
-
-                            resolve(arrayKraken);
+                            pairs[b.name] = b.name + "XXBT";
                         });
+                        // Query Tickers for each pairs
+                        kraken.api("Ticker", { pair: Object.keys(pairs).map(k => pairs[k]).join(",") }, (err, tickers) => {
+                            if (err) { reject(err) }
+                            else {
+                                tickers = tickers.result;
+                                balances.forEach(b => {
+                                    let average = tickers[pairs[b.name]].p[0] // volume weighted average price today
+                                    let averageLast24 = tickers[pairs[b.name]].p[1] // volume weighted average price for last 24H
+                                    let btcValue = parseFloat(average) * parseFloat(b.value); //How much BTC you have for this currency
+
+                                    // let percentageUpdate = ((average - averageLast24)/averageLast24)*100; // % change
+                                    // percentageUpdate = percentageUpdate.toFixed(2); // trunc float to 2 number after dot
+
+                                    arrayKraken.push({
+                                        text: `${b.name} ${b.value} = ${btcValue}₿`,
+                                        color: COLOR_WHITE,
+                                        font: FONT,
+                                        size: SMALL_SIZE
+                                    });
+
+                                    callback(null);
+                                });
+                            }
+                        })
                     }
                 })
             }
+        ], (err, result) => {
+            resolve(arrayKraken);
         })
     }));
 }
