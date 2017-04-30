@@ -1,5 +1,5 @@
 # Cryptobar
-BitBar plugin that check every given time the current status of your currencies in [Kraken](https://kraken.com) or [Poloniex](https://poloniex.com)
+BitBar plugin that check every given time the current status of your currencies in [Kraken](https://kraken.com), [Poloniex](https://poloniex.com) or [Bittrex](https://bittrex.com)
 
 ![Screenshot](screenshot.png)
 
