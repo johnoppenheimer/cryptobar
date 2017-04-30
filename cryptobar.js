@@ -218,9 +218,12 @@ if (config.platforms.hasOwnProperty("bittrex")) {
                         font: FONT,
                         size: SMALL_SIZE
                     });
+                });
 
                     resolve(arrayBittrex);
                 });
+
+                resolve(arrayBittrex);
             });
         });
     }));
