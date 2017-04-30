@@ -80,6 +80,7 @@ if (config.platforms.hasOwnProperty("kraken")) {
                         balances.forEach(b => {
                             pairs[b.name] = b.name + "XXBT";
                         });
+
                         // Query Tickers for each pairs
                         kraken.api("Ticker", { pair: Object.keys(pairs).map(k => pairs[k]).join(",") }, (err, tickers) => {
                             if (err) { reject(err) }
@@ -99,9 +100,9 @@ if (config.platforms.hasOwnProperty("kraken")) {
                                         font: FONT,
                                         size: SMALL_SIZE
                                     });
-
-                                    callback(null);
                                 });
+
+                                callback(null);
                             }
                         })
                     }
