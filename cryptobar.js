@@ -50,12 +50,7 @@ if (config.platforms.hasOwnProperty("kraken")) {
         async.series([
             (callback) => {
                 kraken.api("TradeBalance", {asset: config.platforms.kraken.defaultCurrency}, (err, data) => {
-                    arrayKraken.push({
-                        text: `Total: ${data.result.eb} ${config.platforms.kraken.defaultCurrency}`,
-                        font: FONT,
-                        color: COLOR_GREY,
-                        size: SMALL_SIZE
-                    });
+                    arrayKraken[0].text += ` (${parseFloat(data.result.eb).toFixed(2)}€)`;
                     callback(null);
                 });
             },
@@ -119,6 +114,7 @@ if (config.platforms.hasOwnProperty("poloniex")) {
 
     promises.push(new Promise((resolve, reject) => {
         var arrayPolo = [];
+        var totalPolo = 0;
         //Get your current balances
         poloniex.returnCompleteBalances(null, (err, result) => {
             if (err) { reject(err) }
@@ -143,6 +139,7 @@ if (config.platforms.hasOwnProperty("poloniex")) {
                 
                 balances.forEach(b => {
                     totalInBTC += parseFloat(b.btc);
+                    totalPolo += parseFloat(b.btc);
                     arrayPolo.push({
                         text: `${b.name} ${b.value} = ${b.btc}₿`,
                         color: COLOR_WHITE,
@@ -150,6 +147,12 @@ if (config.platforms.hasOwnProperty("poloniex")) {
                         size: SMALL_SIZE
                     });
                 });
+
+                getExchangeRates().then(rates => {
+                    var euros = (totalPolo/rates.BTC).toFixed(2);
+                    arrayPolo[1].text += ` (${euros}€)`;
+                });
+
                 resolve(arrayPolo);
             }
         });
@@ -167,6 +170,7 @@ if (config.platforms.hasOwnProperty("bittrex")) {
 
     promises.push(new Promise((resolve, reject) => {
         var arrayBittrex = []
+        var totalBittrex = 0;
 
         bittrex.getbalances((data) => {
             arrayBittrex.push(bitbar.sep);
@@ -192,7 +196,7 @@ if (config.platforms.hasOwnProperty("bittrex")) {
                 pairs[b.name] = "BTC-" + b.name;
             });
 
-            //Get market summaries to some calculus
+            //Get market summaries to do some calculus
             bittrex.getmarketsummaries(data => {
                 //Let's filter the summaries only for the currencies in your wallet
                 let summaries = data.result.filter(summary => {
@@ -212,6 +216,8 @@ if (config.platforms.hasOwnProperty("bittrex")) {
                     let btc = average * b.value;
 
                     totalInBTC += parseFloat(btc);
+                    totalBittrex += parseFloat(btc);
+
                     arrayBittrex.push({
                         text: `${b.name} ${b.value} = ${btc}₿`,
                         color: COLOR_WHITE,
@@ -220,7 +226,9 @@ if (config.platforms.hasOwnProperty("bittrex")) {
                     });
                 });
 
-                    resolve(arrayBittrex);
+                getExchangeRates().then(rates => {
+                    var euros = (totalBittrex/rates.BTC).toFixed(2);
+                    arrayBittrex[1].text += ` (${euros}€)`;
                 });
 
                 resolve(arrayBittrex);
