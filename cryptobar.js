@@ -4,6 +4,7 @@ const bitbar = require("bitbar");
 const KrakenClient = require("kraken-api")
 const PoloniexClient = require("poloniex-api-node");
 const bittrex = require("node.bittrex.api");
+const getExchangeRates = require("get-exchange-rates");
 const async = require("async");
 const config = require("./config");
 
@@ -22,6 +23,8 @@ let arrayBitBar = [{
 }]
 
 arrayBitBar.push(bitbar.sep);
+
+var totalInBTC = 0;
 
 let kraken;
 let poloniex;
@@ -89,7 +92,7 @@ if (config.platforms.hasOwnProperty("kraken")) {
 
                                     // let percentageUpdate = ((average - averageLast24)/averageLast24)*100; // % change
                                     // percentageUpdate = percentageUpdate.toFixed(2); // trunc float to 2 number after dot
-
+                                    totalInBTC += parseFloat(btcValue);
                                     arrayKraken.push({
                                         text: `${b.name} ${b.value} = ${btcValue}₿`,
                                         color: COLOR_WHITE,
@@ -138,6 +141,7 @@ if (config.platforms.hasOwnProperty("poloniex")) {
                 }
                 
                 balances.forEach(b => {
+                    totalInBTC += parseFloat(b.btc);
                     arrayPolo.push({
                         text: `${b.name} ${b.value} = ${b.btc}₿`,
                         color: COLOR_WHITE,
@@ -206,6 +210,7 @@ if (config.platforms.hasOwnProperty("bittrex")) {
                     let average = (market.High + market.Low)/2
                     let btc = average * b.value;
 
+                    totalInBTC += parseFloat(btc);
                     arrayBittrex.push({
                         text: `${b.name} ${b.value} = ${btc}₿`,
                         color: COLOR_WHITE,
@@ -224,7 +229,26 @@ Promise.all(promises)
     .then(arrays => {
         arrays.insert(0, arrayBitBar);
         var merged = [].concat.apply([], arrays);
-        bitbar(merged);
+
+        merged.push(bitbar.sep)
+        merged.push({
+            text: `TOTAL = ${totalInBTC}₿`,
+            font: COLOR_GREY,
+            font: FONT
+        });
+
+        getExchangeRates().then(rates => {
+            var euros = (totalInBTC/rates.BTC).toFixed(2);
+
+            merged.push({
+                text: `${euros}€`,
+                color: COLOR_GREY,
+                font: FONT
+            });
+            bitbar(merged);
+        })
+        
+        
     })
     .catch(e => console.log(e));
 
