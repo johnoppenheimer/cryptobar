@@ -3,6 +3,7 @@
 const bitbar = require("bitbar");
 const KrakenClient = require("kraken-api")
 const PoloniexClient = require("poloniex-api-node");
+const bittrex = require("node.bittrex.api");
 const async = require("async");
 const config = require("./config");
 
@@ -146,6 +147,75 @@ if (config.platforms.hasOwnProperty("poloniex")) {
                 });
                 resolve(arrayPolo);
             }
+        });
+    }));
+}
+
+if (config.platforms.hasOwnProperty("bittrex")) {
+    bittrex.options({
+        apikey: config.platforms.bittrex.key,
+        apisecret: config.platforms.bittrex.secret,
+        stream: false,
+        verbose: false,
+        cleartext: false
+    });
+
+    promises.push(new Promise((resolve, reject) => {
+        var arrayBittrex = []
+
+        bittrex.getbalances((data) => {
+            arrayBittrex.push(bitbar.sep);
+            arrayBittrex.push({
+                text: "Bittrex",
+                color: COLOR_BLUE,
+                font: FONT
+            });
+
+            let balances = []
+            data.result.forEach(b => {
+                if (b.Balance > 0 && b.Currency !== "BTC") {
+                    balances.push({
+                        name: b.Currency,
+                        value: b.Balance
+                    });
+                }
+            });
+
+            //Let's create pairs for bittrex
+            var pairs = {};
+            balances.forEach(b => {
+                pairs[b.name] = "BTC-" + b.name;
+            });
+
+            //Get market summaries to some calculus
+            bittrex.getmarketsummaries(data => {
+                //Let's filter the summaries only for the currencies in your wallet
+                let summaries = data.result.filter(summary => {
+                    let currency = summary.MarketName.split("-")[1]
+                    return pairs.hasOwnProperty(currency)
+                });
+
+                //
+                balances.forEach(b => {
+                    //Let's get the market for this currency
+                    let i = summaries.findIndex(el => {
+                        return el.MarketName === pairs[b.name]
+                    });
+                    let market = summaries[i];
+
+                    let average = (market.High + market.Low)/2
+                    let btc = average * b.value;
+
+                    arrayBittrex.push({
+                        text: `${b.name} ${b.value} = ${btc}₿`,
+                        color: COLOR_WHITE,
+                        font: FONT,
+                        size: SMALL_SIZE
+                    });
+
+                    resolve(arrayBittrex);
+                });
+            });
         });
     }));
 }
